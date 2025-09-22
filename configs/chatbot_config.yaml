@@ -1,0 +1,279 @@
+# ====================
+# Neural Chat Engine - Advanced Configuration
+# Configuration avancée pour modèles, domaines, et comportements IA
+# ====================
+
+# ====================
+# INTENT CATEGORIES & DOMAINS
+# ====================
+intent_categories:
+  technical:
+    name: "Technical Assistance"
+    description: "Support technique pour développeurs"
+    color: "#3498db"
+    intents:
+      - code_debug
+      - documentation_request
+      - api_usage
+      - error_explanation
+      - best_practices
+      - architecture_advice
+    
+  ecommerce:
+    name: "E-commerce Support"
+    description: "Assistance client e-commerce"
+    color: "#e74c3c"
+    intents:
+      - product_search
+      - price_inquiry
+      - recommendation_request
+      - order_status
+      - return_policy
+      - payment_help
+    
+  hr:
+    name: "Human Resources"
+    description: "Support RH et recrutement"
+    color: "#9b59b6"
+    intents:
+      - job_inquiry
+      - interview_preparation
+      - salary_negotiation
+      - career_advice
+      - skill_assessment
+      - company_culture
+    
+  multilingual:
+    name: "Multilingual Support"
+    description: "Support multilingue et traduction"
+    color: "#f39c12"
+    intents:
+      - translation_request
+      - language_learning
+      - cultural_context
+      - grammar_check
+      - pronunciation_help
+      - localization
+    
+  general:
+    name: "General Conversation"
+    description: "Conversation générale"
+    color: "#2ecc71"
+    intents:
+      - greeting
+      - goodbye
+      - thank_you
+      - apology
+      - clarification_request
+      - escalation_request
+
+# ====================
+# PERSONALITY PROFILES
+# ====================
+personality_profiles:
+  professional:
+    name: "Professional Assistant"
+    traits:
+      formality: 0.8
+      empathy: 0.6
+      technical_depth: 0.9
+      humor: 0.2
+      patience: 0.9
+    tone_markers:
+      - "formal language"
+      - "technical precision"
+      - "solution-oriented"
+      - "respectful"
+    
+  friendly:
+    name: "Friendly Helper"
+    traits:
+      formality: 0.3
+      empathy: 0.9
+      technical_depth: 0.6
+      humor: 0.7
+      patience: 0.8
+    tone_markers:
+      - "casual language"
+      - "warm and approachable"
+      - "encouraging"
+      - "uses emojis"
+    
+  expert:
+    name: "Technical Expert"
+    traits:
+      formality: 0.7
+      empathy: 0.5
+      technical_depth: 1.0
+      humor: 0.3
+      patience: 0.7
+    tone_markers:
+      - "highly technical"
+      - "precise terminology"
+      - "detailed explanations"
+      - "assumes knowledge"
+    
+  mentor:
+    name: "Learning Mentor"
+    traits:
+      formality: 0.5
+      empathy: 0.8
+      technical_depth: 0.8
+      humor: 0.5
+      patience: 1.0
+    tone_markers:
+      - "educational approach"
+      - "step-by-step guidance"
+      - "encouraging feedback"
+      - "asks clarifying questions"
+
+# ====================
+# RESPONSE GENERATION TEMPLATES
+# ====================
+response_templates:
+  greeting:
+    variations:
+      - "Bonjour ! Comment puis-je vous aider aujourd'hui ?"
+      - "Salut ! Que puis-je faire pour vous ?"
+      - "Hello! How can I assist you today?"
+      - "Hi there! What can I help you with?"
+    
+  technical_help:
+    structure:
+      - acknowledgment: "Je comprends votre problème technique."
+      - analysis: "Analysons la situation..."
+      - solution: "Voici la solution recommandée:"
+      - follow_up: "Avez-vous d'autres questions ?"
+    
+  error_response:
+    variations:
+      - "Je ne suis pas sûr de comprendre. Pourriez-vous reformuler ?"
+      - "Désolé, je n'ai pas bien saisi. Pouvez-vous être plus précis ?"
+      - "I'm not sure I understand. Could you rephrase that?"
+      - "Sorry, I didn't catch that. Could you be more specific?"
+    
+  escalation:
+    structure:
+      - empathy: "Je comprends votre frustration."
+      - limitation: "Cette question dépasse mes capacités actuelles."
+      - redirection: "Je vais vous mettre en contact avec un expert humain."
+      - timeline: "Vous devriez recevoir une réponse sous peu."
+
+# ====================
+# MULTILINGUAL SUPPORT
+# ====================
+languages:
+  fr:
+    name: "Français"
+    code: "fr-FR"
+    model_specific: "distilbert-base-multilingual-cased"
+    confidence_threshold: 0.85
+    
+  en:
+    name: "English" 
+    code: "en-US"
+    model_specific: "distilbert-base-uncased"
+    confidence_threshold: 0.90
+    
+  es:
+    name: "Español"
+    code: "es-ES"
+    model_specific: "distilbert-base-multilingual-cased"
+    confidence_threshold: 0.80
+    
+  de:
+    name: "Deutsch"
+    code: "de-DE"
+    model_specific: "distilbert-base-german-cased"
+    confidence_threshold: 0.85
+
+# ====================
+# CONVERSATION FLOW RULES
+# ====================
+conversation_rules:
+  max_turn_length: 10
+  context_window: 5
+  memory_decay_factor: 0.1
+  
+  escalation_triggers:
+    - repeated_failure: 3
+    - explicit_request: ["human", "agent", "escalate"]
+    - high_frustration: 0.8
+    - complex_query: 0.9
+  
+  personality_adaptation:
+    adaptation_rate: 0.1
+    min_interactions: 3
+    confidence_threshold: 0.7
+    
+  content_filtering:
+    enable_profanity_filter: true
+    enable_sentiment_analysis: true
+    toxicity_threshold: 0.3
+
+# ====================
+# MODEL PERFORMANCE THRESHOLDS
+# ====================
+performance_thresholds:
+  intent_classification:
+    min_confidence: 0.7
+    fallback_threshold: 0.5
+    multi_intent_threshold: 0.6
+    
+  response_generation:
+    min_coherence: 0.6
+    max_repetition: 0.3
+    diversity_penalty: 0.2
+    
+  emotion_detection:
+    confidence_threshold: 0.65
+    emotion_categories:
+      - joy: 0.7
+      - sadness: 0.6
+      - anger: 0.8
+      - fear: 0.6
+      - surprise: 0.5
+      - neutral: 0.5
+
+# ====================
+# ANALYTICS & MONITORING
+# ====================
+analytics:
+  track_user_satisfaction: true
+  track_response_time: true
+  track_conversation_length: true
+  track_intent_accuracy: true
+  track_personality_adaptation: true
+  
+  reporting_intervals:
+    real_time: 1  # minutes
+    hourly: 60
+    daily: 1440
+    weekly: 10080
+    
+  alert_thresholds:
+    response_time_ms: 2000
+    error_rate_percent: 5
+    satisfaction_score: 3.5
+    intent_accuracy_percent: 80
+
+# ====================
+# SAFETY & COMPLIANCE
+# ====================
+safety:
+  content_policy:
+    allow_personal_info: false
+    allow_financial_advice: false
+    allow_medical_advice: false
+    allow_legal_advice: false
+    
+  data_retention:
+    conversation_logs_days: 90
+    analytics_data_days: 365
+    user_profiles_days: 730
+    
+  privacy:
+    anonymize_logs: true
+    encrypt_sensitive_data: true
+    gdpr_compliance: true
+    ccpa_compliance: true
