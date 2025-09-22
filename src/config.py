@@ -278,6 +278,7 @@ class Settings(BaseSettings):
     logs_dir: Path = Field(default_factory=lambda: Path("./logs"))
     
     # Features flags
+    prefer_local_embeddings: bool = Field(default=False, env="PREFER_LOCAL_EMBEDDINGS")
     enable_conversation_memory: bool = Field(default=True, env="ENABLE_CONVERSATION_MEMORY")
     enable_personality_adaptation: bool = Field(default=True, env="ENABLE_PERSONALITY_ADAPTATION")
     enable_emotion_analysis: bool = Field(default=True, env="ENABLE_EMOTION_ANALYSIS")
