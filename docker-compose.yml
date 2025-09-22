@@ -1,0 +1,253 @@
+version: '3.8'
+
+services:
+  # ====================
+  # Base de données PostgreSQL
+  # ====================
+  postgres:
+    image: postgres:15-alpine
+    container_name: neural-chat-postgres
+    environment:
+      POSTGRES_DB: neural_chat_db
+      POSTGRES_USER: neural_user
+      POSTGRES_PASSWORD: neural_pass_2023
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neural_user -d neural_chat_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Cache Redis
+  # ====================
+  redis:
+    image: redis:7-alpine
+    container_name: neural-chat-redis
+    command: redis-server --requirepass redis_pass_2023 --appendonly yes
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Vector Database (Weaviate)
+  # ====================
+  weaviate:
+    image: semitechnologies/weaviate:1.20.0
+    container_name: neural-chat-weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'false'
+      AUTHENTICATION_APIKEY_ENABLED: 'true'
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'neural-chat-key'
+      AUTHENTICATION_APIKEY_USERS: 'neural-user'
+      AUTHORIZATION_ADMINLIST_ENABLED: 'true'
+      AUTHORIZATION_ADMINLIST_USERS: 'neural-user'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
+      ENABLE_MODULES: 'text2vec-transformers,text2vec-openai,generative-openai,generative-cohere'
+      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Transformers pour embeddings
+  # ====================
+  t2v-transformers:
+    image: semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
+    container_name: neural-chat-transformers
+    environment:
+      ENABLE_CUDA: '0'  # Changer à '1' pour GPU
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # API Backend FastAPI
+  # ====================
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: neural-chat-api
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://neural_user:neural_pass_2023@postgres:5432/neural_chat_db
+      - REDIS_URL=redis://:redis_pass_2023@redis:6379/0
+      - WEAVIATE_URL=http://weaviate:8080
+      - WEAVIATE_API_KEY=neural-chat-key
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      weaviate:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Frontend Streamlit
+  # ====================
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: neural-chat-frontend
+    command: ["streamlit", "run", "src/frontend/streamlit_app.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+    environment:
+      - API_URL=http://api:8000
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ENABLE_CORS=false
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Worker Celery pour tâches asynchrones
+  # ====================
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: neural-chat-celery
+    command: ["celery", "-A", "src.api.celery_app", "worker", "--loglevel=info"]
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://neural_user:neural_pass_2023@postgres:5432/neural_chat_db
+      - REDIS_URL=redis://:redis_pass_2023@redis:6379/0
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Monitoring Prometheus
+  # ====================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: neural-chat-prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Dashboard Grafana
+  # ====================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: neural-chat-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_pass_2023
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+  # ====================
+  # Jupyter Lab pour développement
+  # ====================
+  jupyter:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: neural-chat-jupyter
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--token=jupyter_token_2023"]
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    volumes:
+      - .:/app
+      - jupyter_data:/root/.jupyter
+    ports:
+      - "8888:8888"
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
+
+# ====================
+# Volumes persistants
+# ====================
+volumes:
+  postgres_data:
+  redis_data:
+  weaviate_data:
+  prometheus_data:
+  grafana_data:
+  jupyter_data:
+
+# ====================
+# Réseau
+# ====================
+networks:
+  neural-chat-network:
+    driver: bridge

@@ -1,0 +1,132 @@
+# ====================
+# Pre-commit Configuration - Neural Chat Engine
+# ====================
+
+repos:
+  # ====================
+  # Hooks de base
+  # ====================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-added-large-files
+        args: ['--maxkb=10000']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # ====================
+  # Formatage du code Python
+  # ====================
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: [--line-length=88, --target-version=py311]
+
+  # ====================
+  # Tri des imports
+  # ====================
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+
+  # ====================
+  # Linting avec flake8
+  # ====================
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203,W503]
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-bugbear
+          - flake8-comprehensions
+
+  # ====================
+  # Type checking avec mypy
+  # ====================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.5.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-PyYAML]
+        args: [--ignore-missing-imports, --python-version=3.11]
+
+  # ====================
+  # Sécurité avec bandit
+  # ====================
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: [-r, -x, tests/]
+
+  # ====================
+  # Upgrade Python syntax
+  # ====================
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.10.1
+    hooks:
+      - id: pyupgrade
+        args: [--py311-plus]
+
+  # ====================
+  # Dockerfile linting
+  # ====================
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # ====================
+  # Documentation
+  # ====================
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: [--convention=google]
+
+  # ====================
+  # Notebooks Jupyter
+  # ====================
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.7.0
+    hooks:
+      - id: nbqa-black
+        additional_dependencies: [black==23.7.0]
+      - id: nbqa-isort
+        additional_dependencies: [isort==5.12.0]
+      - id: nbqa-flake8
+        additional_dependencies: [flake8==6.0.0]
+
+# ====================
+# Configuration globale
+# ====================
+default_language_version:
+  python: python3.11
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
