@@ -9,13 +9,12 @@ API REST haute performance avec FastAPI :
 """
 
 from .main import app
-from .chat_endpoint import ChatEndpoint
-from .session_manager import SessionManager
-from .websocket_handler import WebSocketHandler
+from .api_types import *
+from .websocket_manager import WebSocketManager
+from .chat_endpoints import router as chat_router
 
 __all__ = [
     "app",
-    "ChatEndpoint", 
-    "SessionManager",
-    "WebSocketHandler"
+    "WebSocketManager",
+    "chat_router"
 ]

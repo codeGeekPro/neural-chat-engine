@@ -7,10 +7,8 @@ Interfaces utilisateur pour le chatbot :
 - Dashboard analytics et monitoring
 """
 
-from .streamlit_app import StreamlitApp
-from .dashboard import Dashboard
+from .streamlit_app import StreamlitChatApp
 
 __all__ = [
-    "StreamlitApp",
-    "Dashboard"
+    "StreamlitChatApp"
 ]

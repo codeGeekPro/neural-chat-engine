@@ -12,7 +12,7 @@ from typing import Optional, Dict, Any, List, Union
 from pathlib import Path
 from enum import Enum
 
-from pydantic import validator, Field
+from pydantic import field_validator, Field
 from pydantic import PostgresDsn, RedisDsn, HttpUrl
 from pydantic_settings import BaseSettings
 
@@ -179,7 +179,8 @@ class APIKeysConfig(BaseSettings):
     jwt_secret_key: str = Field(default="your-secret-key-change-in-production", env="JWT_SECRET_KEY")
     encryption_key: Optional[str] = Field(default=None, env="ENCRYPTION_KEY")
     
-    @validator("jwt_secret_key")
+    @field_validator("jwt_secret_key")
+    @classmethod
     def validate_jwt_secret(cls, v):
         if len(v) < 32:
             raise ValueError("JWT secret key must be at least 32 characters long")
@@ -290,7 +291,8 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = False
         
-    @validator("data_dir", "models_dir", "logs_dir", pre=True)
+    @field_validator("data_dir", "models_dir", "logs_dir", mode="before")
+    @classmethod
     def create_directories(cls, v):
         """Crée les répertoires s'ils n'existent pas."""
         path = Path(v)

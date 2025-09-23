@@ -49,6 +49,10 @@ streamlit>=1.25.0
 gradio>=3.35.0
 plotly>=5.15.0
 dash>=2.10.0
+streamlit-chat>=0.0.2.1
+streamlit-extras>=0.2.7
+streamlit-option-menu>=0.3.2
+streamlit-aggrid>=0.3.3
 
 # ====================
 # Data Processing & Analysis
@@ -172,3 +176,22 @@ textstat>=0.7.0
 yake>=0.4.8
 keybert>=0.7.0
 flair>=0.12.0
+
+# ====================
+# API & WebSocket Dependencies
+# ====================
+starlette>=0.27.0
+websockets>=11.0.0
+python-multipart>=0.0.6
+aiofiles>=23.0.0
+jinja2>=3.1.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.0
+
+# ====================
+# Development & Testing
+# ====================
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+pytest-cov>=4.1.0

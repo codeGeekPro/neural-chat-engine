@@ -1,0 +1,139 @@
+# ====================
+# REQUIREMENTS UNIFIÉS - NEURAL CHAT ENGINE
+# ====================
+# Ce fichier consolide toutes les dépendances avec résolution des conflits
+# Versions optimisées pour compatibilité et performance
+
+# ====================
+# CORE DEPENDENCIES (Highest priority)
+# ====================
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+transformers>=4.30.0
+tokenizers>=0.13.0
+accelerate>=0.20.0
+bitsandbytes>=0.39.0
+
+# ====================
+# LANGCHAIN & LLM ORCHESTRATION
+# ====================
+langchain>=0.0.200
+langchain-community>=0.0.20
+langchain-openai>=0.0.8
+openai>=1.0.0
+anthropic>=0.8.0
+cohere>=4.21.0
+
+# ====================
+# VECTOR DATABASES & SEARCH
+# ====================
+pinecone-client>=2.2.0
+weaviate-client>=3.20.0
+chromadb>=0.4.0
+faiss-cpu>=1.7.0
+hnswlib>=0.7.0
+
+# ====================
+# BACKEND & API
+# ====================
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+sqlalchemy>=2.0.0
+alembic>=1.11.0
+psycopg2-binary>=2.9.0
+redis>=4.5.0
+celery>=5.3.0
+
+# ====================
+# FRONTEND & UI
+# ====================
+streamlit>=1.25.0
+gradio>=3.35.0
+plotly>=5.15.0
+dash>=2.10.0
+streamlit-chat>=0.0.2.1
+streamlit-extras>=0.2.7
+streamlit-option-menu>=0.3.2
+streamlit-aggrid>=0.3.3
+
+# ====================
+# DATA PROCESSING & ANALYSIS
+# ====================
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+nltk>=3.8.0
+spacy>=3.6.0
+textblob>=0.17.0
+
+# ====================
+# MULTIMODAL CAPABILITIES
+# ====================
+Pillow>=10.0.0
+opencv-python>=4.8.0
+librosa>=0.10.0
+soundfile>=0.12.0
+pyaudio>=0.2.11
+scikit-image>=0.19.0
+easyocr>=1.7.0
+pyttsx3>=2.90
+
+# ====================
+# WEB SCRAPING & APIs
+# ====================
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+scrapy>=2.9.0
+selenium>=4.10.0
+tweepy>=4.14.0
+praw>=7.7.0
+
+# ====================
+# DOCUMENT PROCESSING
+# ====================
+pypdf2>=3.0.0
+python-docx>=0.8.0
+openpyxl>=3.1.0
+pdfplumber>=0.9.0
+python-magic>=0.4.0
+
+# ====================
+# EXPERIMENT TRACKING & MLOPS
+# ====================
+wandb>=0.15.0
+mlflow>=2.4.0
+tensorboard>=2.13.0
+
+# ====================
+# DEVELOPMENT & TESTING
+# ====================
+pytest>=7.4.0
+pytest-mock>=3.7.0
+pytest-cov>=4.1.0
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.4.0
+
+# ====================
+# UTILITIES & CONFIG
+# ====================
+pyyaml>=6.0
+loguru>=0.7.0
+python-dateutil>=2.8.0
+pytz>=2021.0
+
+# ====================
+# COMPATIBILITY NOTES
+# ====================
+# - torch>=2.0.0: Required for latest transformers compatibility
+# - pydantic>=2.0.0: Major version upgrade with breaking changes
+# - numpy>=1.24.0: Required for pandas>=2.0.0 compatibility
+# - scikit-learn>=1.3.0: Latest stable with performance improvements
+# - All versions tested for compatibility in Python 3.12
