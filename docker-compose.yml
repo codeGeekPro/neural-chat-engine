@@ -1,3 +1,22 @@
+  # ====================
+  # Reverse Proxy Nginx
+  # ====================
+  nginx:
+    image: nginx:latest
+    container_name: neural-chat-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+    networks:
+      - neural-chat-network
 version: '3.8'
 
 services:

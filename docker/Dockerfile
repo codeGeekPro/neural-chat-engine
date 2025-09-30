@@ -2,7 +2,7 @@
 # Production Dockerfile - Neural Chat Engine
 # ====================
 
-FROM python:3.11-slim as base
+FROM nvidia/cuda:12.2.0-cudnn8-runtime-ubuntu24.04 AS base
 
 # Métadonnées
 LABEL maintainer="CodeGeekPro <contact@codegeekpro.com>"
@@ -14,22 +14,21 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_NO_INTERACTION=1
+    MODEL_CACHE_DIR=/models/cache
 
 # ====================
 # Étape de construction
 # ====================
 FROM base as builder
 
-# Installer les dépendances système pour la compilation
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier les fichiers de dépendances
-COPY requirements.txt setup.py ./
+COPY requirements/requirements.txt ./
 COPY src/ ./src/
 
 # Installer les dépendances Python
@@ -50,21 +49,17 @@ RUN apt-get update && apt-get install -y \
 # Créer utilisateur non-root
 RUN groupadd -r neural && useradd -r -g neural neural
 
-# Créer les répertoires de travail
-RUN mkdir -p /app /app/data /app/logs /app/models
+RUN mkdir -p /app /app/data /app/logs /app/models $MODEL_CACHE_DIR
 WORKDIR /app
 
-# Copier l'environnement Python depuis le builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copier le code source
 COPY --chown=neural:neural . .
+RUN chmod 700 $MODEL_CACHE_DIR
 
-# Changer vers l'utilisateur non-root
 USER neural
 
-# Exposer les ports
 EXPOSE 8000 8501
 
 # Variables d'environnement par défaut
@@ -73,12 +68,15 @@ ENV ENVIRONMENT=production \
     API_HOST=0.0.0.0 \
     API_PORT=8000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
+
+# Signal handling pour une sortie propre
+STOPSIGNAL SIGTERM
+
 # Commande par défaut
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python3.11", "scripts/start.py"]
 
 # ====================
 # Dockerfile pour développement
