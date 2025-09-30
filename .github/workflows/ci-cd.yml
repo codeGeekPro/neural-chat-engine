@@ -1,18 +1,20 @@
-name: CogniTalk AI CI/CD
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    name: Run Pytest
+  benchmark:
+    name: Performance Benchmark
     runs-on: ubuntu-latest
+    needs: [test, model-validation]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
+        uses: actions/setup-python@v5
+
+      name: CogniTalk AI CI/CD
+
+      on:
+        push:
+          branches: [main, develop]
+        pull_request:
+          branches: [main]
+
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -81,6 +83,138 @@ jobs:
     needs: [test, lint, security-scan, model-validation]
     steps:
       - uses: actions/checkout@v4
+
+
+      name: CogniTalk AI CI/CD
+
+      on:
+        push:
+          branches: [main, develop]
+        pull_request:
+          branches: [main]
+
+      jobs:
+        test:
+          name: Run Pytest
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            - name: Install dependencies
+              run: |
+                pip install -r requirements/requirements.txt
+            - name: Run tests
+              run: |
+                pytest --maxfail=2 --disable-warnings --junitxml=results.xml
+            - name: Upload test results
+              uses: actions/upload-artifact@v4
+              with:
+                name: test-results
+                path: results.xml
+
+        lint:
+          name: Lint & Format
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            - name: Install linters
+              run: |
+                pip install flake8 black
+            - name: Run flake8
+              run: flake8 src/ tests/
+            - name: Run black check
+              run: black --check src/ tests/
+
+        security-scan:
+          name: Security Scan
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            - name: Install Bandit
+              run: pip install bandit
+            - name: Run Bandit
+              run: bandit -r src/ -ll
+
+        model-validation:
+          name: Model Validation & Performance
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            - name: Install dependencies
+              run: |
+                pip install -r requirements/requirements.txt
+            - name: Validate model
+              run: |
+                pytest tests/test_model_performance.py --maxfail=1 --disable-warnings
+
+        benchmark:
+          name: Performance Benchmark
+          runs-on: ubuntu-latest
+          needs: [test, model-validation]
+          steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            - name: Install dependencies
+              run: |
+                pip install -r requirements/requirements.txt
+                pip install requests psutil
+            - name: Run benchmark suite
+              run: |
+                python src/benchmark/performance_benchmark.py > benchmark_report.txt
+            - name: Upload benchmark report
+              uses: actions/upload-artifact@v4
+              with:
+                name: benchmark-report
+                path: benchmark_report.txt
+
+        build:
+          name: Build Docker Images
+          runs-on: ubuntu-latest
+          needs: [test, lint, security-scan, model-validation]
+          steps:
+            - uses: actions/checkout@v4
+            - name: Build API image
+              run: docker build -t neural-chat-api -f docker/Dockerfile .
+            - name: Build Frontend image
+              run: docker build -t neural-chat-frontend -f docker/Dockerfile .
+            - name: Build and push (if on main)
+              if: github.ref == 'refs/heads/main'
+              run: |
+                echo "Pousser les images sur le registry ici (ajouter secrets)"
+
+        deploy:
+          name: Deploy to Production
+          runs-on: ubuntu-latest
+          needs: build
+          steps:
+            - name: Deploy
+              run: |
+                echo "Déploiement automatisé (à compléter selon l'infra cible)"
+            - name: Performance Monitoring
+              run: |
+                echo "Vérification des métriques Prometheus/Grafana après déploiement"
+            - name: Rollback on Failure
+              if: failure()
+              run: |
+                echo "Rollback automatique en cas d'échec du déploiement"
       - name: Build API image
         run: docker build -t neural-chat-api -f docker/Dockerfile .
       - name: Build Frontend image
